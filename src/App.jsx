@@ -69,7 +69,7 @@ export default function App() {
       <SystemInfoPanel infoList={infoList} />
       <div className="h-screen w-screen">
         <Viewer
-          ply4dPath="/ply/001.4d"
+          ply4dPath="/gs-app/ply/001.4d"
           onTotleFrameCountChange={handleotleFrameCountChange}
           renderMode={mode}
           showAxes={axes}

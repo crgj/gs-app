@@ -168,45 +168,69 @@ export class SplatLoader {
       mode: "cors",
       credentials: "omit",
     });
-
-    if (req.status !== 200)
+  
+    if (req.status !== 200) {
       throw new Error(`${req.status} Unable to load ${req.url}`);
-
+    }
+  
     const reader = req.body.getReader();
-    const contentLength = parseInt(req.headers.get("content-length"));
-    this.splatData = new Uint8Array(contentLength);
-
-    this.downsample = contentLength / this.rowLength > 500000 ? 1 : 1 / devicePixelRatio;
-
- 
-
-    let bytesRead = 0;
-
+    const contentLengthHeader = req.headers.get("content-length");
+    const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : undefined;
+    
+    // 🔥 初始化变量
+    const chunks = [];      // 临时存每段数据
+    let totalLength = 0;     // 已经读取的总长度
+    let bytesRead = 0;       // 本次读取位置
+  
+    // 🔥 读取流
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
-      this.splatData.set(value, bytesRead);
+    
+      chunks.push(value);
+      totalLength += value.length;
       bytesRead += value.length;
-
-      // 进度通知（0~100）
+    
+      // 🔥 每次读取更新进度
       if (this.onProgress) {
-        const percent = Math.min((bytesRead / contentLength) * 100, 100);
-        this.onProgress(percent.toFixed(1), `${bytesRead} / ${contentLength}`);
+        if (contentLength) {
+          const percent = Math.min((bytesRead / contentLength) * 100, 99.9);
+          this.onProgress(percent.toFixed(1), `${bytesRead} / ${contentLength} bytes`);
+        } else {
+          const percent=0;
+          this.onProgress(percent.toFixed(1), `${bytesRead} bytes`);
+          //console.log("bytesRead",bytesRead)
+        }
       }
     }
-
+    
+    // 🔥 读取完成后，补100%进度
+    if (this.onProgress ) {
+      this.onProgress(100);
+    }
+  
+    // 🔥 合并chunks成完整数据
+    this.splatData = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      this.splatData.set(chunk, offset);
+      offset += chunk.length;
+    }
+  
+    console.log("Finished loading:", totalLength, "bytes");
+  
+    // 🔥 判断是否是ply文件（根据开头magic number）
     if (this._isPly(this.splatData)) {
-     
       const buffer = this.processPlyBuffer(this.splatData.buffer);
       const vertexCount = Math.floor(buffer.byteLength / this.rowLength);
-
-      //console.log(this.url);
-
-      this.onDataReady?.('buffer', { buffer, vertexCount });  // 外部调用 setupTexture
-
+  
+      // 🔥 通知外部，数据准备好了
+      this.onDataReady?.('buffer', { buffer, vertexCount });
+    } else {
+      console.warn("Loaded data is not a valid .ply file");
     }
   }
+  
 
 
 }

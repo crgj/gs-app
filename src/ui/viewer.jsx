@@ -78,10 +78,10 @@ function computeLookAtViewMatrix(position, target, up = [0, 1, 0]) {
 
 
 
-export default function Viewer({ ply4dPath = "/ply/001.4d", onTotleFrameCountChange, currentFrame = 0, renderMode = 0, showAxes = true }) {
+export default function Viewer({ ply4dPath = "", onTotleFrameCountChange, currentFrame = 0, renderMode = 0, showAxes = true }) {
   const canvasRef = useRef();
   const rendererRef = useRef(null);
-  const [loading_status, setLoadingStatus] = useState({ info: "准备中...", progress: 100 });
+  const [loading_status, setLoadingStatus] = useState({ info: "准备中...", progress: 100 ,desc:''});
   const plyDatasRef = useRef([]);
   const viewProjRef = useRef(null);
   const lastFileRef = useRef([]);
@@ -115,7 +115,7 @@ export default function Viewer({ ply4dPath = "/ply/001.4d", onTotleFrameCountCha
       //console.log("读取到的ply文件列表：", fileList);
       // 得到4d所在目录
       const folderUrl = ply4dPath.substring(0, ply4dPath.lastIndexOf('/'));
-
+      
 
 
       //创建渲染器
@@ -137,7 +137,8 @@ export default function Viewer({ ply4dPath = "/ply/001.4d", onTotleFrameCountCha
       for (let i = 0; i < fileList.length; i++) {
        
         const plyPath = folderUrl + "/" + fileList[i];
-    
+        //const plyPath =  'http://localhost:4173/gs-app/ply/Frame000023.ply'
+
         //console.log("准备读取:", plyPath);
         if(lastFileRef.current.includes(plyPath))
         {
@@ -167,10 +168,11 @@ export default function Viewer({ ply4dPath = "/ply/001.4d", onTotleFrameCountCha
                 resolve(); // 🔥 这一个ply读取解析完，允许进入下一轮for
               }
             },
-            onProgress: (percent) => {
+            onProgress: (percent,info) => {
               setLoadingStatus({
                 info: `正在读取数据 ${plyPath}...`,
-                progress: percent
+                progress: percent,
+                desc: info
               });
             }
           });
