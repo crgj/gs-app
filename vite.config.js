@@ -10,7 +10,7 @@ export default defineConfig(({ command, mode }) => ({
   ],
   base: '/gs-app/', // 🚀注意这里！！你的仓库名，前后都有 /
   build: {
-    outDir: 'dist', // ✅ 设置输出目录为 dist
+    outDir: 'docs', // ✅ 设置输出目录为 dist
     emptyOutDir: true, // ✅ build之前清空目录，保持干净
   },
 }))

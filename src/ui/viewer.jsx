@@ -114,7 +114,7 @@ export default function Viewer({ ply4dPath = "", onTotleFrameCountChange, curren
       if (fileList.length === 0) throw new Error(".4d文件中没有有效的ply文件名！");
       //console.log("读取到的ply文件列表：", fileList);
       // 得到4d所在目录
-      const folderUrl = ply4dPath.substring(0, ply4dPath.lastIndexOf('/'));
+      var folderUrl = ply4dPath.substring(0, ply4dPath.lastIndexOf('/'));
       
 
 
@@ -136,10 +136,15 @@ export default function Viewer({ ply4dPath = "", onTotleFrameCountChange, curren
 
       for (let i = 0; i < fileList.length; i++) {
        
+
+        folderUrl='https://crgj.github.io/ply/gs-app'
+
         const plyPath = folderUrl + "/" + fileList[i];
         //const plyPath =  'http://localhost:4173/gs-app/ply/Frame000023.ply'
 
-        //console.log("准备读取:", plyPath);
+
+
+        console.log("准备读取:", plyPath);
         if(lastFileRef.current.includes(plyPath))
         {
           continue
