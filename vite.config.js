@@ -9,4 +9,8 @@ export default defineConfig(({ command, mode }) => ({
     tailwindcss(),
   ],
   base: command === 'build' ? '/gs-app/' : '/', // ✅ 动态base
+  build: {
+    outDir: 'dist', // ✅ 设置输出目录为 dist
+    emptyOutDir: true, // ✅ build之前清空目录，保持干净
+  },
 }))
