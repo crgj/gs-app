@@ -172,7 +172,7 @@ export class SplatLoader {
     if (req.status !== 200) {
       throw new Error(`${req.status} Unable to load ${req.url}`);
     }
-  
+    console.log(("Loading data from", req.url));
     const reader = req.body.getReader();
     const contentLengthHeader = req.headers.get("content-length");
     const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : undefined;

@@ -106,74 +106,54 @@ export default function Viewer({ ply4dPath = "", onTotleFrameCountChange, curren
 
 
     const run = async () => {
-
       const response = await fetch(ply4dPath);
       const text = await response.text();
-      // 按行分割，得到每个 .ply 文件名
       const fileList = text.split('\n').map(line => line.trim()).filter(line => line.endsWith('.ply'));
+    
       if (fileList.length === 0) throw new Error(".4d文件中没有有效的ply文件名！");
-      //console.log("读取到的ply文件列表：", fileList);
-      // 得到4d所在目录
+    
       var folderUrl = ply4dPath.substring(0, ply4dPath.lastIndexOf('/'));
-      
-
-
-      //创建渲染器
+    
       const renderer = new GaussianRenderer(canvas);
-      rendererRef.current = renderer; // 💡 加这一句 
+      rendererRef.current = renderer;
       renderer.updateProjection(camera, innerWidth, innerHeight, downsample);
-
+    
       window.addEventListener("resize", () =>
         renderer.updateProjection(camera, innerWidth, innerHeight, downsample)
       );
-
-
-   
-
+    
       plyDatasRef.current.length = 0;
-     
-      
-
+      lastFileRef.current.length = 0;
+      count.current = 0;
+    
+      const loadTasks = [];
+    
       for (let i = 0; i < fileList.length; i++) {
-       
-
-        folderUrl='https://crgj.github.io/ply/gs-app'
-
-        const plyPath = folderUrl + "/" + fileList[i];
-        //const plyPath =  'http://localhost:4173/gs-app/ply/Frame000023.ply'
+        const plyPath = folderUrl + "/" + fileList[i]; 
 
 
-
-        console.log("准备读取:", plyPath);
-        if(lastFileRef.current.includes(plyPath))
-        {
-          continue
+        if (lastFileRef.current.includes(plyPath)) {
+          continue;
         }
- 
-        lastFileRef.current.push(plyPath)
-
-        // 🔥 每次新建一个Promise，等待这个文件处理完成
-        await new Promise((resolve) => {
+        lastFileRef.current.push(plyPath);
+    
+        // 🔥 收集每一个加载Promise到数组
+        loadTasks.push(new Promise((resolve) => {
           const loader = new SplatLoader({
             url: plyPath,
             onDataReady: (type, data) => {
               if (type === 'buffer') {
                 plyDatasRef.current.push(data);
-                //console.log('数据读取完成:', plyPath);
-    
                 count.current++;
-                //console.log(count.current,fileList.length)
-                // ✅ 如果是最后一个文件
+    
                 if (count.current === fileList.length) {
-                  //console.log('全部读取完成, 总数:', plyDatasRef.current.length);
                   onTotleFrameCountChange?.(plyDatasRef.current.length);
-                  
                 }
     
-                resolve(); // 🔥 这一个ply读取解析完，允许进入下一轮for
+                resolve(); // 单个文件加载完成
               }
             },
-            onProgress: (percent,info) => {
+            onProgress: (percent, info) => {
               setLoadingStatus({
                 info: `正在读取数据 ${plyPath}...`,
                 progress: percent,
@@ -182,46 +162,48 @@ export default function Viewer({ ply4dPath = "", onTotleFrameCountChange, curren
             }
           });
     
-          loader.load(); // 开始加载，但不await
-        });
-    }
-
- 
-
-
-
-      //创建控制器
+          loader.load();
+        }));
+      }
+    
+      // 🔥 等所有文件都加载完成
+      await Promise.all(loadTasks);
+    
+      console.log("✅ 所有PLY文件加载完成");
+    
+      // 创建控制器
       const controller = new InputController(
         canvas,
         () => camera.viewMatrix,
         (vm) => { camera.viewMatrix = vm; }
       );
- 
-
-      //初始化
+    
       const actualViewMatrix = controller.getCurrentViewMatrix();
       var viewProj = multiply4(renderer.projectionMatrix, actualViewMatrix);
-      viewProjRef.current = viewProj
-
-      renderer.setData(plyDatasRef.current[0], viewProj);
-
+      viewProjRef.current = viewProj;
+    
+      // ✅ 确保有数据再setData
+      if (plyDatasRef.current.length > 0) {
+        renderer.setData(plyDatasRef.current[0], viewProj);
+      } else {
+        console.error("❌ 没有加载到有效的PLY数据！");
+        return;
+      }
+    
       const frame = () => {
         controller.applyKeyboardControl();
         if (renderer.vertexCount > 0) {
           const actualViewMatrix = controller.getCurrentViewMatrix();
           viewProj = multiply4(renderer.projectionMatrix, actualViewMatrix);
-
+    
           renderer.updateDepthIndex(viewProj);
           renderer.render(actualViewMatrix);
         }
-
         requestAnimationFrame(frame);
       };
-
+    
       frame();
-
     };
-
     run();
 
   }, [ply4dPath]);

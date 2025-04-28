@@ -366,6 +366,8 @@ export class GaussianRenderer {
   //设置数据
   setData(data,viewProj) {
     if(viewProj==null)viewProj=this.lastProj
+
+    
     const {buffer,vertexCount}=data;
 
     const texData= this.generateTexture(buffer,vertexCount);
