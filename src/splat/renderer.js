@@ -536,7 +536,7 @@ export class GaussianRenderer {
     gl.useProgram(this.program);
     gl.uniformMatrix4fv(this.u_view, false, actualViewMatrix);
 
-    gl.uniform1i(this.u_mode, this.mode);
+    gl.uniform1f(this.u_mode, this.mode);
 
     gl.drawArraysInstanced(gl.TRIANGLE_FAN, 0, 4, this.vertexCount);
 
