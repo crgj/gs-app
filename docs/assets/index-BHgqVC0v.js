@@ -55,7 +55,7 @@ uniform highp usampler2D u_texture;
 uniform mat4 projection, view;
 uniform vec2 focal;
 uniform vec2 viewport;
-uniform int u_mode; // 0: normal, 1: position only, 2: ellipse
+uniform float u_mode; // 0: normal, 1: position only, 2: ellipse
 
 in vec2 position;
 in int index;
@@ -72,6 +72,7 @@ void main () {
     vec4 cam = view * vec4(uintBitsToFloat(cen.xyz), 1);
     vec4 pos2d = projection * cam;
 
+     
     float clip = 1.2 * pos2d.w;
     if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
         gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
@@ -125,7 +126,7 @@ void main () {
 }`,ah=`#version 300 es
 precision highp float;
 
-uniform int u_mode; // 0: normal, 1: position only, 2: ellipse
+uniform float u_mode; // 0: normal, 1: position only, 2: ellipse
 
 in vec4 vColor;
 in vec2 vPosition;
@@ -147,12 +148,12 @@ void main () {
 
 
 
-    if (u_mode == -1) {
+    if (u_mode == -1.0) {
         if (A < -2.0) discard;
         fragColor = vec4(0.0, 0.0, 0.0, 0.0);
     }
 
-     if (u_mode == 1) {
+     if (u_mode == 1.0) {
         vec2 point = vPosition.x * vMajorAxis + vPosition.y * vMinorAxis;
         float d = dot(point, point);
         float ellipse = exp(-d);
@@ -164,7 +165,7 @@ void main () {
     }
 
 
-    if (u_mode == 2) {
+    if (u_mode == 2.0) {
         if (A > -2.0 && A < -1.9) {
             fragColor = vec4(vColor.rgb, 0.0); // white-like ellipse
             return;

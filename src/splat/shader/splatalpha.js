@@ -21,6 +21,8 @@ out vec2 vMinorAxis;
 out float vDepth;
 
 void main () {
+    int dummy = u_mode; // 假装用一下，防止被优化掉
+
     uvec4 cen = texelFetch(u_texture, ivec2((uint(index) & 0x3ffu) << 1, uint(index) >> 10), 0);
     vec4 cam = view * vec4(uintBitsToFloat(cen.xyz), 1);
     vec4 pos2d = projection * cam;
